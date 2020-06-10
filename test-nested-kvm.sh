@@ -3,6 +3,7 @@
 DIR=$(pwd)
 
 # Install libvirt kvm
+sudo apt-get update
 sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils wget
 
 CIRROS_IMAGE_VER='0.4.0'
