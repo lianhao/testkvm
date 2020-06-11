@@ -2,9 +2,47 @@
 
 DIR=$(pwd)
 
-# Install libvirt kvm
-sudo apt-get update
-sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils wget
+find_release () {
+  os_rel=`cat /etc/os-release | grep '^ID=' | sed 's/"//g' | sed "s/'//g" | cut -d '=' -f 2`
+  os_ver_code=`cat /etc/os-release | grep '^VERSION_CODENAME=' | sed 's/"//g' | sed "s/'//g" | cut -d '=' -f 2`
+}
+
+set_ubuntu () {
+  case $os_ver_code in
+    bionic|eoan|focal|groovy)
+      sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils wget
+      ;;
+    xenial|trusty|precise)
+      sudo apt-get install qemu-kvm libvirt-bin bridge-utils wget
+      ;;
+    *)
+      echo "Unknown Ubuntu version: $os_ver_code"
+      exit 1
+      ;;
+  esac
+}
+
+setup_centos () {
+   sudo yum install qemu-kvm qemu-img libvirt libvirt-python libvirt-client virt-install bridge-utils wget
+   sudo systemctl enable libvirtd
+   sudo systemctl start libvirtd
+}
+
+find_release
+
+case $os_rel in
+  ubuntu)
+    set_ubuntu
+    ;;
+  centos)
+    set_centos
+    ;;
+  *)
+    echo "Unknown OS: $os_rel"
+    exit 1
+    ;;
+esac
+
 
 CIRROS_IMAGE_VER='0.4.0'
 CIRROS_IMAGE_FILE="cirros-${CIRROS_IMAGE_VER}-x86_64-disk.img"
@@ -29,7 +67,7 @@ cat <<EOF | tee nested-kvm.xml
   <devices>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
-      <source file="${DIR}/${CIRROS_IMAGE_FILE}"/>
+      <source file="/tmp/${CIRROS_IMAGE_FILE}"/>
       <target dev='hda' bus='ide'/>
     </disk>
     <graphics type='vnc' port='5900' autoport='yes' listen='127.0.0.1'>
@@ -56,6 +94,7 @@ if [ "x$tmp" == "xnested-kvm-001" ]; then
     esac
   done
 fi
+cp -f "${CIRROS_IMAGE_FILE}" "/tmp/${CIRROS_IMAGE_FILE}"
 sudo virsh create nested-kvm.xml
 
 # check if VM created
