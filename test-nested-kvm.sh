@@ -67,7 +67,7 @@ cat <<EOF | tee nested-kvm.xml
   <devices>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
-      <source file="/tmp/${CIRROS_IMAGE_FILE}"/>
+      <source file="/var/lib/libvirt/images/${CIRROS_IMAGE_FILE}"/>
       <target dev='hda' bus='ide'/>
     </disk>
     <graphics type='vnc' port='5900' autoport='yes' listen='127.0.0.1'>
@@ -94,7 +94,7 @@ if [ "x$tmp" == "xnested-kvm-001" ]; then
     esac
   done
 fi
-cp -f "${CIRROS_IMAGE_FILE}" "/tmp/${CIRROS_IMAGE_FILE}"
+sudo cp -f "${CIRROS_IMAGE_FILE}" "/var/lib/libvirt/images/${CIRROS_IMAGE_FILE}"
 sudo virsh create nested-kvm.xml
 
 # check if VM created
