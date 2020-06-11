@@ -13,7 +13,7 @@ set_ubuntu () {
       sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils wget
       ;;
     xenial|trusty|precise)
-      sudo apt-get install qemu-kvm libvirt-bin bridge-utils wget
+      sudo apt-get install -y qemu-kvm libvirt-bin bridge-utils wget
       ;;
     *)
       echo "Unknown Ubuntu version: $os_ver_code"
@@ -108,8 +108,7 @@ fi
 sleep 2
 tmp=$(sudo virsh list --all | grep nested-kvm-001 | awk '{print $3}')
 if [ "x$tmp" = "xrunning" ]; then
-  echo "Success. Please use the following command to connect to console"
-  echo "sudo virsh console nested-kvm-001"
+  echo "Successfully created VM."
 else
   echo "FAILURE! VM nested-kvm-001 is not in running state!"
   echo "---------------------------------"
@@ -118,4 +117,13 @@ else
   exit 1
 fi
 
+echo "Now try to destroy the VM just created"
+sudo virsh destroy nested-kvm-001
+tmp=$(sudo virsh list --all | grep nested-kvm-001 | awk '{print $2}')
+if [ "x$tmp" == "x" ]; then
+  echo "Successfully destroyed VM."
+else
+  echo "FAILURE! VM nested-kvm-001 is not destroyed"
+  exit 1
+fi
 
